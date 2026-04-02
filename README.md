@@ -22,9 +22,7 @@ So this integration targets the NOMA cloud path through Ayla.
 
 From the live environment:
 
-- The NOMA/Nook dehumidifier is on the network at `10.168.20.68`
-- Its MAC is `08:b6:1f:c5:40:1c`
-- It is visible in UniFi as `Numa Dehumidifier`
+- The NOMA dehumidifier is visible on the LAN
 - It does **not** accept Midea LAN connections on `6444`
 - It **does** expose TCP `80`, but not in a way that makes it a drop-in Home Assistant local integration
 
@@ -59,7 +57,7 @@ This first version is intentionally conservative. It is designed to be debuggabl
 
 ## Live Dehumidifier Property Map Confirmed
 
-For the DSN `AC000W029233145` / `Nook DH` device, I confirmed these live Ayla properties:
+For the tested dehumidifier device, I confirmed these live Ayla properties:
 
 - writable:
   - `power`
@@ -174,7 +172,7 @@ python scripts/dump_noma_iq.py \
 python scripts/dump_noma_iq.py \
   --username you@example.com \
   --password 'your-password' \
-  --dsn AC000W029233145
+  --dsn YOUR_DEVICE_DSN
 ```
 
 ### Output as JSON
@@ -183,7 +181,7 @@ python scripts/dump_noma_iq.py \
 python scripts/dump_noma_iq.py \
   --username you@example.com \
   --password 'your-password' \
-  --dsn AC000W029233145 \
+  --dsn YOUR_DEVICE_DSN \
   --json
 ```
 
@@ -195,9 +193,9 @@ This is the tool to use if:
 
 ## Current Entity Behavior
 
-### Confirmed entities for the tested Nook dehumidifier
+### Confirmed entities for the tested dehumidifier
 
-For the live `Nook DH` unit used during development, the integration now creates:
+For the dehumidifier used during development, the integration now creates:
 
 - a dehumidifier entity
 - a power switch
