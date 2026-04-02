@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sign in to NOMA iQ",
+        "description": "Enter the credentials you use in the NOMA iQ mobile app.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "select_device": {
+        "title": "Select device",
+        "description": "Choose the NOMA iQ device to add.",
+        "data": {
+          "dsn": "Device"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed",
+      "cannot_connect": "Unable to connect to NOMA iQ",
+      "no_devices": "No devices were returned for this account"
+    }
+  }
+}
+
