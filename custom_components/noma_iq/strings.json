@@ -31,7 +31,52 @@
       "filter_clean_alarm": {
         "name": "Filter Clean Alarm"
       }
+    },
+    "sensor": {
+      "current_humidity": {
+        "name": "Current Humidity"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "continuous": "Continuous",
+          "manual": "Manual"
+        }
+      },
+      "fan_speed": {
+        "name": "Fan Speed",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "display_on": {
+        "name": "Display On"
+      },
+      "ionizer": {
+        "name": "Ionizer"
+      },
+      "auto_defrost": {
+        "name": "Auto Defrost"
+      }
+    },
+    "number": {
+      "target_humidity": {
+        "name": "Target Humidity"
+      }
+    },
+    "humidifier": {
+      "dehumidifier": {
+        "name": "Dehumidifier"
+      }
     }
   }
 }
-

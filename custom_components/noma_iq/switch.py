@@ -11,10 +11,7 @@ class NomaIqWritableBooleanSwitch(NomaIqEntity, SwitchEntity):
     def __init__(self, coordinator, property_name: str) -> None:
         super().__init__(coordinator, f"switch_{property_name}")
         self._property_name = property_name
-
-    @property
-    def name(self):
-        return self._property_name.replace("_", " ").title()
+        self._attr_translation_key = property_name
 
     @property
     def is_on(self):

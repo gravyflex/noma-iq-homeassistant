@@ -7,7 +7,7 @@ from .entity import NomaIqEntity
 
 
 class NomaIqTargetHumidityNumber(NomaIqEntity, NumberEntity):
-    _attr_name = "Target Humidity"
+    _attr_translation_key = "target_humidity"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_native_min_value = 35
     _attr_native_max_value = 85

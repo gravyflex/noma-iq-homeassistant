@@ -7,7 +7,7 @@ from .entity import NomaIqEntity
 
 
 class NomaIqHumiditySensor(NomaIqEntity, SensorEntity):
-    _attr_name = "Current Humidity"
+    _attr_translation_key = "current_humidity"
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_device_class = SensorDeviceClass.HUMIDITY
 
