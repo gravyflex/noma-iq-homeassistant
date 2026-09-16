@@ -22,6 +22,16 @@
       "cannot_connect": "Unable to connect to NOMA iQ",
       "no_devices": "No devices were returned for this account"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "water_bucket_full": {
+        "name": "Water Bucket Full"
+      },
+      "filter_clean_alarm": {
+        "name": "Filter Clean Alarm"
+      }
+    }
   }
 }
 
