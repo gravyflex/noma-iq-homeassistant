@@ -11,7 +11,7 @@ from .entity import NomaIqEntity
 
 class NomaIqDehumidifierEntity(NomaIqEntity, HumidifierEntity):
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
-    _attr_name = None
+    _attr_translation_key = "dehumidifier"
     _attr_supported_features = HumidifierEntityFeature(0)
     _attr_min_humidity = 35
     _attr_max_humidity = 85

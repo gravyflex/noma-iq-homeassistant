@@ -19,13 +19,10 @@ class NomaIqPropertySelect(NomaIqEntity, SelectEntity):
     ) -> None:
         super().__init__(coordinator, f"select_{property_name}")
         self._property_name = property_name
+        self._attr_translation_key = property_name
         self._options = options
         self._read_map = read_map or {}
         self._write_map = write_map or {}
-
-    @property
-    def name(self):
-        return self._property_name.replace("_", " ").title()
 
     @property
     def current_option(self):
