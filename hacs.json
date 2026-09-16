@@ -1,7 +1,7 @@
 {
   "name": "NOMA iQ",
   "content_in_root": false,
-  "domains": ["noma_iq"],
-  "country": ["CA"],
-  "version": "0.1.1"
+  "country": [
+    "CA"
+  ]
 }
