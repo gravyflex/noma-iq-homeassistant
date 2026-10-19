@@ -1,0 +1,92 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Sign in to NOMA iQ",
+        "description": "Enter the credentials you use in the NOMA iQ mobile app.",
+        "data": {
+          "username": "Email",
+          "password": "Password"
+        }
+      },
+      "select_device": {
+        "title": "Select device",
+        "description": "Choose the NOMA iQ device to add.",
+        "data": {
+          "dsn": "Device"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Authentication failed",
+      "cannot_connect": "Unable to connect to NOMA iQ",
+      "no_devices": "No devices were returned for this account"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "water_bucket_full": {
+        "name": "Water Bucket Full"
+      },
+      "filter_clean_alarm": {
+        "name": "Filter Clean Alarm"
+      }
+    },
+    "sensor": {
+      "current_humidity": {
+        "name": "Current Humidity"
+      }
+    },
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "continuous": "Continuous",
+          "manual": "Manual"
+        }
+      },
+      "fan_speed": {
+        "name": "Fan Speed",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "display_on": {
+        "name": "Display On"
+      },
+      "ionizer": {
+        "name": "Ionizer"
+      },
+      "auto_defrost": {
+        "name": "Auto Defrost"
+      }
+    },
+    "number": {
+      "target_humidity": {
+        "name": "Target Humidity"
+      }
+    },
+    "humidifier": {
+      "dehumidifier": {
+        "name": "Dehumidifier"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NOMA iQ options",
+        "data": {
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    }
+  }
+}
