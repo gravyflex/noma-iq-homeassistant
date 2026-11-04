@@ -42,11 +42,17 @@
       },
       "filter_clean_alarm": {
         "name": "Filter Clean Alarm"
+      },
+      "humidity_sensor_fault": {
+        "name": "Humidity Sensor Fault"
       }
     },
     "sensor": {
       "current_humidity": {
         "name": "Current Humidity"
+      },
+      "water_bucket_status": {
+        "name": "Bucket Status"
       }
     },
     "select": {
@@ -88,6 +94,11 @@
     "humidifier": {
       "dehumidifier": {
         "name": "Dehumidifier"
+      }
+    },
+    "climate": {
+      "controls": {
+        "name": "Controls"
       }
     }
   },

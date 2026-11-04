@@ -30,7 +30,11 @@ ENTITY_MODULES: dict[str, str] = {
 DYNAMIC_TRANSLATION_KEYS: dict[str, dict[str, list[str]]] = {
     # binary_sensor.py: _attr_translation_key = key  (key arg in async_setup_entry loop)
     "binary_sensor.py": {
-        "binary_sensor": ["water_bucket_full", "filter_clean_alarm"],
+        "binary_sensor": [
+            "water_bucket_full",
+            "filter_clean_alarm",
+            "humidity_sensor_fault",
+        ],
     },
     # select.py: _attr_translation_key = property_name
     "select.py": {

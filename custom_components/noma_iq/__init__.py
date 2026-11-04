@@ -9,6 +9,7 @@ from .const import DOMAIN
 from .coordinator import NomaIqDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
     Platform.HUMIDIFIER,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
