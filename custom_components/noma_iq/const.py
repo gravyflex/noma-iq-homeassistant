@@ -48,4 +48,11 @@ PROP_ALIASES = {
         "filter_alarm",
         "clean_filter_alarm",
     ],
+    "humidity_sensor_fault": [
+        "humidity_sensor_fault",
+        "humidity_fault",
+        "humidity_sensor_error",
+        "humidity_error",
+        "sensor_fault",
+    ],
 }

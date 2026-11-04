@@ -205,12 +205,14 @@ This is the tool to use if:
 For the dehumidifier used during development, the integration now creates:
 
 - a dehumidifier entity
+- a thermostat-style `climate` entity with dry/auto/off modes, target and current humidity, and fan modes
 - a power switch
 - a target humidity number
 - a mode select
 - a fan speed select
 - a current humidity sensor
-- bucket-full and filter-clean binary sensors
+- a bucket status sensor (`OK` / `Full`)
+- bucket-full, filter-clean, and humidity-sensor-fault binary sensors
 
 The extra power switch and target humidity number are intentional even when the humidifier entity exists. They give you direct control surfaces in the UI and make debugging much easier if Home Assistant’s humidifier domain behavior changes between releases.
 
@@ -220,6 +222,9 @@ When present, it exposes:
 
 - bucket full / water full status
 - filter-clean alarm
+- humidity sensor fault
+
+They carry the `problem` device class, so they surface in Home Assistant's problem dashboard instead of looking like ordinary toggles.
 
 ### Switches
 

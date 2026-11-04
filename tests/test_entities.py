@@ -25,6 +25,7 @@ class FakeDevice:
             "timer_remaining": {"value": 0, "base_type": "boolean", "read_only": False, "name": "timer_remaining"},
             "water_bucket_full": {"value": 0, "base_type": "boolean", "read_only": True, "name": "water_bucket_full"},
             "filter_clean_alarm": {"value": 0, "base_type": "boolean", "read_only": True, "name": "filter_clean_alarm"},
+            "humidity_sensor_fault": {"value": 0, "base_type": "boolean", "read_only": True, "name": "humidity_sensor_fault"},
             "current_humidity": {"value": 45, "base_type": "integer", "read_only": True, "name": "current_humidity"},
             "target_humidity": {"value": 50, "base_type": "integer", "read_only": False, "name": "target_humidity"},
             "mode": {"value": "Normal", "base_type": "string", "read_only": False, "name": "mode"},
@@ -100,9 +101,15 @@ async def test_entity_names(hass):
         "Water Bucket Auto Defrost",
         "Water Bucket Timer Remaining",
         "Water Bucket Dehumidifier",
+        "Water Bucket Bucket Status",
+        "Water Bucket Humidity Sensor Fault",
+        "Water Bucket Dehumidifier",
+        "Water Bucket Controls",
     ]
     missing = [name for name in expected if name not in names]
     assert not missing, f"missing entity names: {missing}\nall: {sorted(names)}"
+
+    assert names["Water Bucket Controls"] == ["climate.water_bucket_controls"]
 
     duplicates = [name for name, ids in names.items() if len(ids) > 1]
     assert not duplicates, f"duplicate entity names: {duplicates}"
