@@ -5,9 +5,9 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .ayla import NomaIqClient, NomaIqAuthError
+from .ayla import NomaIqAuthError, NomaIqClient, NomaIqConnectionError
 from .const import (
     CONF_DEVICE_NAME,
     CONF_DSN,
@@ -31,22 +31,28 @@ class NomaIqConfigFlow(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._devices: dict[str, dict[str, Any]] = {}
 
+    async def _async_validate(self, username: str, password: str):
+        """Return (devices, errors) for a credential pair."""
+        client = NomaIqClient(username, password, async_get_clientsession(self.hass))
+        try:
+            devices = await client.async_list_devices()
+        except NomaIqAuthError:
+            return None, {"base": "invalid_auth"}
+        except NomaIqConnectionError as err:
+            _LOGGER.debug("NOMA iQ connection error: %s", err)
+            return None, {"base": "cannot_connect"}
+        except Exception:  # noqa: BLE001 - never leak a traceback into the flow
+            _LOGGER.exception("Unexpected error talking to NOMA iQ")
+            return None, {"base": "unknown"}
+        return devices, {}
+
     async def async_step_user(self, user_input: dict[str, Any] | None = None):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._username = user_input[CONF_USERNAME]
             self._password = user_input[CONF_PASSWORD]
-            session = async_create_clientsession(self.hass)
-            client = NomaIqClient(self._username, self._password, session)
-            try:
-                devices = await client.async_list_devices()
-            except NomaIqAuthError:
-                errors["base"] = "invalid_auth"
-            except Exception as err:
-                _LOGGER.exception("NOMA iQ login/device listing failed")
-                errors["base"] = "cannot_connect"
-                _LOGGER.debug("NOMA iQ error: %s", err)
-            else:
+            devices, errors = await self._async_validate(self._username, self._password)
+            if devices is not None:
                 self._devices = {
                     device.dsn: {
                         CONF_DEVICE_NAME: device.name,
@@ -103,6 +109,37 @@ class NomaIqConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(self, entry_data: dict[str, Any]):
+        """Start reauthentication after the coordinator rejected the credentials."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ):
+        """Ask for a new password and reload the entry once it is accepted."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            username = entry.data[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+            devices, errors = await self._async_validate(username, password)
+            if devices is not None:
+                if not any(device.dsn == entry.data[CONF_DSN] for device in devices):
+                    errors["base"] = "unknown_device"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={CONF_PASSWORD: password},
+                    )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            description_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            errors=errors,
+        )
+
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry):
         return NomaIqOptionsFlow()
@@ -125,4 +162,3 @@ class NomaIqOptionsFlow(OptionsFlow):
                 }
             ),
         )
-

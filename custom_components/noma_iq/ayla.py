@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
 from ayla_iot_unofficial.ayla_iot_unofficial import AylaApi
+from ayla_iot_unofficial.exc import AylaAuthError, AylaAuthExpiringError, AylaNotAuthedError
 
 try:
     from .const import DEHUM_OEM_MODEL, NOMA_APP_ID, NOMA_APP_SECRET
@@ -20,11 +22,22 @@ class NomaIqError(Exception):
 
 
 class NomaIqAuthError(NomaIqError):
-    """Authentication failed."""
+    """Authentication was rejected by the cloud."""
+
+
+class NomaIqConnectionError(NomaIqError):
+    """The cloud could not be reached."""
 
 
 class NomaIqDeviceNotFoundError(NomaIqError):
     """Configured device is not present."""
+
+
+# Errors raised by the Ayla library when the session is invalid or expired.
+AYLA_AUTH_ERRORS = (AylaAuthError, AylaNotAuthedError, AylaAuthExpiringError)
+
+# Errors raised while talking to the cloud that are not credential problems.
+AYLA_CONNECTION_ERRORS = (ClientError, asyncio.TimeoutError)
 
 
 @dataclass(slots=True)
@@ -43,7 +56,11 @@ def _normalize_key(value: str) -> str:
 
 
 class NomaIqClient:
-    """Thin wrapper around the Ayla API specialized for the NOMA iQ app tenant."""
+    """Thin wrapper around the Ayla API specialized for the NOMA iQ app tenant.
+
+    The Ayla session is established lazily and then reused for every poll. It is
+    only re-established when the cloud rejects the bearer token.
+    """
 
     def __init__(self, username: str, password: str, session: ClientSession) -> None:
         self._api = AylaApi(
@@ -53,16 +70,51 @@ class NomaIqClient:
             app_secret=NOMA_APP_SECRET,
             websession=session,
         )
+        self._signed_in = False
 
-    async def async_login(self) -> None:
+    @property
+    def signed_in(self) -> bool:
+        """Return True while the cached Ayla session is usable."""
+        return self._signed_in
+
+    def _invalidate(self) -> None:
+        self._signed_in = False
+
+    async def async_login(self, *, force: bool = False) -> None:
+        """Sign in, unless an unexpired session is already cached."""
+        if self._signed_in and not force:
+            return
+        self._invalidate()
         try:
             await self._api.async_sign_in()
-        except Exception as err:  # library-specific exceptions are not stable
+        except AylaAuthError as err:
             raise NomaIqAuthError(str(err)) from err
+        except AYLA_CONNECTION_ERRORS as err:
+            raise NomaIqConnectionError(str(err)) from err
+        except Exception as err:  # noqa: BLE001 - library raises bare KeyError on odd payloads
+            raise NomaIqError(str(err)) from err
+        self._signed_in = True
+
+    async def _async_with_session(self, call):
+        """Run an API call, re-authenticating once if the token was rejected."""
+        await self.async_login()
+        try:
+            return await call()
+        except AYLA_AUTH_ERRORS:
+            self._invalidate()
+        except AYLA_CONNECTION_ERRORS as err:
+            raise NomaIqConnectionError(str(err)) from err
+        await self.async_login(force=True)
+        try:
+            return await call()
+        except AYLA_AUTH_ERRORS as err:
+            self._invalidate()
+            raise NomaIqAuthError(str(err)) from err
+        except AYLA_CONNECTION_ERRORS as err:
+            raise NomaIqConnectionError(str(err)) from err
 
     async def async_list_devices(self) -> list[NomaDeviceSummary]:
-        await self.async_login()
-        devices = await self._api.async_list_devices()
+        devices = await self._async_with_session(self._api.async_list_devices)
         return [
             NomaDeviceSummary(
                 dsn=device["dsn"],
@@ -77,13 +129,17 @@ class NomaIqClient:
         ]
 
     async def async_get_device(self, dsn: str):
-        await self.async_login()
-        devices = await self._api.async_get_devices(update=False)
-        for device in devices:
-            if device.serial_number == dsn:
-                await device.async_update()
-                return device
-        raise NomaIqDeviceNotFoundError(dsn)
+        async def _fetch():
+            for device in await self._api.async_get_devices(update=False):
+                if device.serial_number == dsn:
+                    await device.async_update()
+                    return device
+            return None
+
+        device = await self._async_with_session(_fetch)
+        if device is None:
+            raise NomaIqDeviceNotFoundError(dsn)
+        return device
 
     @staticmethod
     def property_name_map(device) -> dict[str, str]:
@@ -125,9 +181,8 @@ class NomaIqClient:
             return 1 if bool(value) else 0
         return value
 
-    @staticmethod
-    async def async_set_property_value(device, property_name: str, value: Any) -> None:
-        value = NomaIqClient._coerce_property_value(device, property_name, value)
+    async def async_set_property_value(self, device, property_name: str, value: Any) -> None:
+        value = self._coerce_property_value(device, property_name, value)
         _LOGGER.debug("Setting NOMA property %s=%r on %s", property_name, value, device.serial_number)
 
         payload = {
@@ -143,15 +198,20 @@ class NomaIqClient:
             f"{device.eu_ads_url if getattr(device, 'europe', False) else device.ads_url}"
             "/apiv1/batch_datapoints.json"
         )
-        async with await device.ayla_api.async_request(
-            "post",
-            endpoint,
-            json=payload,
-        ) as resp:
-            try:
-                resp_data = await resp.json()
-            except Exception:
-                resp_data = None
+        async def _write():
+            async with await device.ayla_api.async_request(
+                "post",
+                endpoint,
+                json=payload,
+            ) as resp:
+                if resp.status == 401:
+                    raise AylaAuthError("Write rejected: not authenticated")
+                try:
+                    return await resp.json()
+                except Exception:
+                    return None
+
+        resp_data = await self._async_with_session(_write)
 
         if property_name in device.properties_full:
             device.properties_full[property_name]["value"] = value

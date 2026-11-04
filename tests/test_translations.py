@@ -161,3 +161,42 @@ def test_select_entities_have_state_translations() -> None:
         "Missing 'state' translations for select entities:\n"
         + "\n".join(missing_state)
     )
+
+def test_entity_modules_do_not_blank_the_name() -> None:
+    """_attr_name = None makes HA ignore translation_key names and duplicate entities.
+
+    Entities must be named through translation_key (or an explicit _attr_name
+    derived from the property), never blanked out.
+    """
+    offenders = [
+        module_file
+        for module_file in ENTITY_MODULES
+        if (COMPONENT_DIR / module_file).exists()
+        and re.search(
+            r"^\s*_attr_name\s*=\s*None\s*$",
+            (COMPONENT_DIR / module_file).read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
+    ]
+
+    assert not offenders, (
+        "Entity modules must not set _attr_name = None (it defeats translation_key naming):\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_switch_translation_keys_cover_translated_properties() -> None:
+    """Properties in TRANSLATED_SWITCH_KEYS must have entity.switch.<key> entries."""
+    module_path = COMPONENT_DIR / "switch.py"
+    content = module_path.read_text(encoding="utf-8")
+    match = re.search(r"TRANSLATED_SWITCH_KEYS\s*=\s*\{([^}]*)\}", content)
+    assert match, "switch.py must declare TRANSLATED_SWITCH_KEYS"
+
+    keys = re.findall(r'"(\w+)"', match.group(1))
+    assert keys, "TRANSLATED_SWITCH_KEYS must list at least one property"
+
+    switch_section = load_strings_json().get("entity", {}).get("switch", {})
+    missing = [
+        f"entity.switch.{key}" for key in keys if "name" not in switch_section.get(key, {})
+    ]
+    assert not missing, "Missing switch translation entries:\n" + "\n".join(missing)

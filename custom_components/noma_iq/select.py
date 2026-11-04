@@ -6,8 +6,6 @@ from .entity import NomaIqEntity
 
 
 class NomaIqPropertySelect(NomaIqEntity, SelectEntity):
-    _attr_name = None
-
     def __init__(
         self,
         coordinator,
