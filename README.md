@@ -87,6 +87,13 @@ The integration authenticates against the Ayla cloud using the same app tenant i
 
 That avoids guessing tenant IDs or pretending the device is on a generic Ayla tenant.
 
+The integration signs in once and reuses that Ayla session for every poll. It only signs in again when the cloud rejects the cached token, so a normal refresh cycle costs a single request. Credential rejections are reported separately from network failures:
+
+- rejected credentials raise `ConfigEntryAuthFailed`, which prompts Home Assistant to start the reauth flow
+- timeouts and connection failures stay `UpdateFailed` and simply retry on the next poll
+
+The reauth flow asks for the password only (the email is fixed for the account), validates it against the cloud, confirms the configured device is still visible, and then reloads the entry.
+
 ### 2. Device Selection
 
 The config flow:
@@ -217,6 +224,8 @@ When present, it exposes:
 ### Switches
 
 Writable boolean properties are exposed as switches, including `power` for the current dehumidifier implementation.
+
+Every entity uses `has_entity_name`, so it is named after its device plus its own name. Properties with a translated name (`power`, `display_on`, `ionizer`, `auto_defrost`) use that translation; any other writable boolean derives a name from the property (`timer_remaining` → `Timer Remaining`) so entities stay readable and never collide.
 
 ### Number entities
 

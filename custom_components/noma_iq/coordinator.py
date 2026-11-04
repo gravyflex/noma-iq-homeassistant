@@ -5,9 +5,10 @@ import logging
 from typing import Any
 
 from aiohttp import ClientSession
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .ayla import NomaIqClient, NomaIqDeviceNotFoundError
+from .ayla import NomaIqAuthError, NomaIqClient, NomaIqDeviceNotFoundError
 from .const import CONF_DSN, CONF_PASSWORD, CONF_USERNAME, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +36,11 @@ class NomaIqDataUpdateCoordinator(DataUpdateCoordinator[Any]):
         try:
             self.device = await self.client.async_get_device(self.entry.data[CONF_DSN])
             return self.device
+        except NomaIqAuthError as err:
+            raise ConfigEntryAuthFailed(
+                f"NOMA iQ rejected the stored credentials: {err}"
+            ) from err
         except NomaIqDeviceNotFoundError as err:
             raise UpdateFailed(f"Configured NOMA device not found: {err}") from err
         except Exception as err:
             raise UpdateFailed(str(err)) from err
-

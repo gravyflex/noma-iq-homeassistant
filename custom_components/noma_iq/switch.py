@@ -4,14 +4,20 @@ from homeassistant.components.switch import SwitchEntity
 
 from .entity import NomaIqEntity
 
+# Properties with an entry under "entity.switch" in strings.json/translations.
+TRANSLATED_SWITCH_KEYS = {"power", "display_on", "ionizer", "auto_defrost"}
+
 
 class NomaIqWritableBooleanSwitch(NomaIqEntity, SwitchEntity):
-    _attr_name = None
-
     def __init__(self, coordinator, property_name: str) -> None:
         super().__init__(coordinator, f"switch_{property_name}")
         self._property_name = property_name
-        self._attr_translation_key = property_name
+        if property_name in TRANSLATED_SWITCH_KEYS:
+            self._attr_translation_key = property_name
+        else:
+            # No translation entry: derive a readable name so the entity is not
+            # named after the device and does not collide with its siblings.
+            self._attr_name = property_name.replace("_", " ").strip().title()
 
     @property
     def is_on(self):

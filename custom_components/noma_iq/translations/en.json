@@ -15,18 +15,30 @@
         "data": {
           "dsn": "Device"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate NOMA iQ",
+        "description": "Sign in again for **{username}** to restore access to the NOMA iQ cloud.",
+        "data": {
+          "password": "Password"
+        }
       }
     },
     "error": {
       "invalid_auth": "Authentication failed",
       "cannot_connect": "Unable to connect to NOMA iQ",
-      "no_devices": "No devices were returned for this account"
+      "no_devices": "No devices were returned for this account",
+      "unknown_device": "The configured device is not available for this account",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "reauth_successful": "Authentication was updated successfully"
     }
   },
   "entity": {
     "binary_sensor": {
       "water_bucket_full": {
-        "name": "Water Bucket Full"
+        "name": "Bucket Full"
       },
       "filter_clean_alarm": {
         "name": "Filter Clean Alarm"
